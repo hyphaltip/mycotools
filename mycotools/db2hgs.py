@@ -58,7 +58,10 @@ def run_mmseqs(
             raise OSError("invalid working directory")
         elif not algorithm in {"mmseqs easy-linclust", "mmseqs easy-cluster"}:
             raise OSError("invalid mmseqs binary")
-        faa_files = sorted(glob.glob(os.path.join(wrk_dir, "faa", "*faa")))
+        faa_files = sorted(
+            glob.glob(os.path.join(wrk_dir, "faa", "*faa"))
+            + glob.glob(os.path.join(wrk_dir, "faa", "*faa.gz"))
+        )
         if not faa_files:
             raise FatalError(f"no proteomes found in {wrk_dir}faa", 1)
         mmseqs_cmd = subprocess.call(

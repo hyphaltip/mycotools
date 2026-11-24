@@ -38,3 +38,30 @@ def test_run_mmseqs_no_proteomes_is_fatal(tmp_path, monkeypatch):
     monkeypatch.setattr(db2hgs, "symlink_files", lambda *a, **k: None)
     with pytest.raises(FatalError):
         db2hgs.run_mmseqs(None, str(tmp_path) + "/")
+
+
+def test_run_mmseqs_clusters_gzipped_proteomes(tmp_path):
+    """BFD-style .faa.gz proteomes: soft_main must keep the .gz suffix."""
+    import gzip
+
+    src = tmp_path / "src"
+    src.mkdir()
+    _write_proteomes(src)
+    wrk = tmp_path / "wrk"
+    wrk.mkdir()
+    paths = {}
+    for ome in ("a", "b"):
+        gz = src / f"{ome}.proteins.fa.gz"
+        with gzip.open(gz, "wt") as out:
+            out.write((src / "faa" / f"{ome}.faa").read_text())
+        paths[ome] = str(gz)
+
+    class FakeDB(dict):
+        def set_index(self, col):
+            return self
+
+    db = FakeDB({o: {"faa": p} for o, p in paths.items()})
+    res = db2hgs.run_mmseqs(db, str(wrk) + "/", cpus=2)
+    assert sum(1 for _ in open(res)) == 40
+    links = sorted(p.name for p in (wrk / "faa").iterdir())
+    assert links == ["a.faa.gz", "b.faa.gz"]

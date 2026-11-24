@@ -24,7 +24,10 @@ def soft_main(filetypes, db, output_path, print_link=False, verbose=False):
         for ome, row in db.items():
             for ftype in filetypes:
                 if os.path.isfile(row[ftype]):
-                    sym_path = f"{output_path}{ftype}/{ome}.{ftype}"
+                    # keep the .gz suffix: mmseqs and others detect
+                    # compression from the file name, not the content
+                    suffix = ".gz" if row[ftype].endswith(".gz") else ""
+                    sym_path = f"{output_path}{ftype}/{ome}.{ftype}{suffix}"
                     try:
                         os.symlink(row[ftype], sym_path)
                     except FileExistsError:
