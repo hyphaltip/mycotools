@@ -14,11 +14,13 @@ from mycotools.acc2gff import db_main as acc2gff
 
 
 def col_CDS(
-    gff_list, types={"gene", "CDS", "exon", "mRNA", "tRNA", "rRNA", "RNA", "pseudogene"}
+    gff_list, types=None
 ):
     """Collect all CDS entries from a `gff` and store them into cds_dict.
     If the gene found in the CDS is in the set of `ids` then add that type
     to the CDS dict for that protein header."""
+    if types is None:
+        types = {"gene", "CDS", "exon", "mRNA", "tRNA", "rRNA", "RNA", "pseudogene"}
 
     cds_dict = defaultdict(dict)
     # parse the gff to acquire the aliases
@@ -49,7 +51,7 @@ def contig2gbk(
     contig_dict,
     contig_seq,
     faa,
-    product_searches={"product": r"product=([^;]+)"},
+    product_searches=None,
     full=False,
 ):
     """Generate a genbank string for a contig_dict, which contains a dictionary
@@ -61,6 +63,8 @@ def contig2gbk(
     contig_seq: contig sequence string
     faa: proteome
     product_searches: {prod_id: product regular expression}"""
+    if product_searches is None:
+        product_searches = {"product": r"product=([^;]+)"}
 
     seq_coords = []  # a list of all the coordinates from the contig
     for prot, prot_list in contig_dict.items():
@@ -443,10 +447,12 @@ def ome_main(
     ome,
     gff_lists,
     row,
-    product_searches={"product": r"product=([^;]+)"},
+    product_searches=None,
     break_contigs=False,
 ):
     """Create a genbank for the whole genome"""
+    if product_searches is None:
+        product_searches = {"product": r"product=([^;]+)"}
     gbks = defaultdict(list)
     faa, fna = fa2dict(row["faa"]), fa2dict(row["fna"])
     for key, gffs in gff_lists.items():
@@ -475,11 +481,13 @@ def ome_main(
 def main(
     gff_list,
     db,
-    product_searches={"product": r"product=([^;]+)"},
+    product_searches=None,
     full=False,
     break_contigs=False,
 ):
     """Generate a genbank for each inputed gff, its associated fna, and ome"""
+    if product_searches is None:
+        product_searches = {"product": r"product=([^;]+)"}
     cds_dict = col_CDS(
         gff_list,
         types={"gene", "CDS", "exon", "mRNA", "tRNA", "rRNA", "RNA", "pseudogene"},

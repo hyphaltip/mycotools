@@ -22,6 +22,7 @@ from mycotools.lib.biotools import (
 )
 from mycotools.lib.kontools import collect_files, eprint, format_path
 from mycotools.gff2seq import aamain as gff2proteome
+from mycotools.gff2seq import sortGene, sortContig
 from mycotools.utils.curGFF3 import rename_and_organize
 
 
@@ -611,42 +612,6 @@ def curate(gff, prefix=None, failed=None, comps=gtfComps()):
         translation_str += f"{entry}\t{translation}\n"
 
     return newGff, translation_str
-
-
-def sortGene(sorting_group):
-
-    out_group = []
-    for entryType in ["gene", "mrna", "trna", "rrna", "exon", "cds"]:
-        todel = []
-        for i, entry in enumerate(sorting_group):
-            if entry["type"].lower() == entryType:
-                out_group.append(entry)
-                todel.append(i)
-        for i in reversed(todel):
-            sorting_group.pop(i)
-
-    for entry in sorting_group:
-        out_group.append(entry)
-
-    return out_group
-
-
-def sortContig(contigData):
-
-    coordinates = {}
-    for gene in contigData:
-        t_coords = []
-        for entry in contigData[gene]:
-            t_coords.extend([int(entry["start"]), int(entry["end"])])
-        coordinates[gene] = min(t_coords)
-    coordinates = {
-        k: v for k, v in sorted(coordinates.items(), key=lambda item: item[1])
-    }
-    outContig = []
-    for gene in coordinates:
-        outContig.extend(contigData[gene])
-
-    return outContig
 
 
 def preSortGFF(unsorted_gff, idComp):

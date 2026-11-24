@@ -124,15 +124,21 @@ def main(
     db,
     rank=None,
     x_number=0,
-    lineage_list=[],
-    omes_set=set(),
+    lineage_list=None,
+    omes_set=None,
     by_rank=False,
     source=None,
     nonpublished=False,
     inverse=False,
-    aa_set=set(),
+    aa_set=None,
 ):
     """Python entry point for extract_mtdb"""
+    if lineage_list is None:
+        lineage_list = []
+    if omes_set is None:
+        omes_set = set()
+    if aa_set is None:
+        aa_set = set()
 
     db = db.set_index("ome")
     if x_number > 0:

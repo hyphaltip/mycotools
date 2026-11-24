@@ -31,50 +31,7 @@ from mycotools.lib.kontools import (
     findExecs,
 )
 from mycotools.lib.dbtools import log_editor, loginCheck, mtdb, read_tax
-
-
-def ncbidb2df(data, stdin=False):
-    import pandas as pd, pandas
-
-    columns = mtdb.columns
-    if isinstance(data, mtdb):
-        db_df = pd.DataFrame(data.reset_index())
-    elif not stdin:
-        data = format_path(data)
-        db_df = pd.read_csv(data, sep="\t")
-        if "ome" not in set(db_df.columns) and "assembly_acc" not in set(db_df.columns):
-            db_df = pd.read_csv(data, sep="\t", header=None)
-    else:
-        db_df = pd.read_csv(StringIO(data), sep="\t")
-        if "ome" not in set(db_df.columns) and "assembly_acc" not in set(db_df.columns):
-            db_df = pd.read_csv(StringIO(data), sep="\t", header=None)
-
-    db_df = db_df.fillna("")
-
-    return db_df
-
-
-def prepare_folders(output_path, gff, prot, assem, transcript):
-
-    file_types = []
-    if assem:
-        if not os.path.exists(output_path + "fna"):
-            os.mkdir(output_path + "fna")
-        file_types.append("fna")
-    if gff:
-        if not os.path.exists(output_path + "gff3"):
-            os.mkdir(output_path + "gff3")
-        file_types.append("gff3")
-    if prot:
-        if not os.path.exists(output_path + "faa"):
-            os.mkdir(output_path + "faa")
-        file_types.append("faa")
-    if transcript:
-        if not os.path.exists(output_path + "transcript"):
-            os.mkdir(output_path + "transcript")
-        file_types.append("transcript")
-
-    return file_types
+from mycotools.ncbiDwnld import ncbidb2df, prepare_folders
 
 
 def compile_log(output_path, remove=False):

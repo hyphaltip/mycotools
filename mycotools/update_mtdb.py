@@ -67,6 +67,7 @@ from mycotools.utils.ncbi2db import main as ncbi2db
 from mycotools.utils.jgi2db import main as jgi2db
 from mycotools.predb2mtdb import main as predb2mtdb
 from mycotools.predb2mtdb import predb_headers, read_predb, gen_omes
+from mycotools.predb2mtdb import acq_forbid_omes
 from mycotools.assemblyStats import main as assStats
 from mycotools.annotationStats import main as annStats
 
@@ -272,16 +273,6 @@ def parse_dups(file_path):
 #  ):
 #    edit = dup_code + '\t' + '\t'.join(dup_entry)
 #   log_editor(file_path, dup_code, edit)
-
-
-def acq_forbid_omes(file_path):
-    """Parse a file with forbidden ome accessions - ome codes that have been
-    used before and are no longer valid"""
-    if not os.path.isfile(file_path):
-        return set()
-    with open(file_path, "r") as raw:
-        relics = set([x.rstrip() for x in raw])
-    return relics
 
 
 def write_forbid_omes(omes, file_path):

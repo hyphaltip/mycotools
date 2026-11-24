@@ -13,8 +13,10 @@ from dna_features_viewer import GraphicFeature, GraphicRecord
 from mycotools.lib.biotools import gff2list, gff3Comps
 
 
-def compileProducts(gff, prod_comp, types={"tRNA", "mRNA", "rRNA"}):
+def compileProducts(gff, prod_comp, types=None):
     # find all the product attributes for color pallette selection
+    if types is None:
+        types = {"tRNA", "mRNA", "rRNA"}
     products = []
     for entry in gff:
         if entry["type"] in types:
@@ -34,12 +36,14 @@ def gff2svg(
     prod_comp=gff3Comps()["product"],
     width=10,
     null="hypothetical protein",
-    types={"tRNA", "mRNA", "rRNA"},
+    types=None,
     max_size=100,
     labels=True,
     gen_new_colors=True,
 ):
     # needs to end with .svg
+    if types is None:
+        types = {"tRNA", "mRNA", "rRNA"}
     if not svg_path.endswith(".svg"):
         svg_path += ".svg"
 
@@ -119,17 +123,21 @@ def gff2svg(
 def main(
     gff_list,
     svg_path,
-    product_dict={},
+    product_dict=None,
     width=10,
     prod_comp=gff3Comps()["product"],
     null="hypothetical protein",
-    types={"tRNA", "mRNA", "rRNA"},
+    types=None,
     labels=True,
     wheel=None,
     shuffle=False,
     gen_new_colors=True,
 ):
 
+    if product_dict is None:
+        product_dict = {}
+    if types is None:
+        types = {"tRNA", "mRNA", "rRNA"}
     product_dict = {str(k.lower()): v for k, v in product_dict.items()}
     if not wheel and not product_dict:
         if not set(product_dict.keys()).difference({null}):
