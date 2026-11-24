@@ -4,6 +4,7 @@
 
 import re
 import sys
+import gzip
 from collections import defaultdict
 from itertools import chain
 from mycotools.lib.kontools import eprint
@@ -270,9 +271,17 @@ def dict2xmfa(xmfa_dict, description=True):
     return xmfa_string.rstrip()
 
 
+def open_text(path, mode="r"):
+    """Open a plain or gzip-compressed text file for reading.
+    Compression is detected from the `.gz` suffix."""
+    if str(path).endswith(".gz"):
+        return gzip.open(path, mode + "t")
+    return open(path, mode)
+
+
 def fa2dict(fasta_input):  # file_ = True):
     fasta_dict = {}
-    with open(fasta_input, "r") as raw:
+    with open_text(fasta_input) as raw:
         for line in raw:
             data = line.rstrip()
             if data.startswith(">"):
@@ -304,7 +313,7 @@ def fa2dict_accs(fasta_input, accs=None):  # file_ = True):
     if accs is None:
         accs = set()
     fasta_dict = {}
-    with open(fasta_input, "r") as raw:
+    with open_text(fasta_input) as raw:
         for line in raw:
             data = line.rstrip()
             if data.startswith(">"):
@@ -460,7 +469,7 @@ def gff2list(gff_info, path=True, error=True):
     gff_list_dict = []
     data = []
     if path:
-        with open(gff_info, "r") as raw_gff:
+        with open_text(gff_info) as raw_gff:
             for line in raw_gff:
                 d = line.rstrip()
                 if d and not d.startswith("#"):
