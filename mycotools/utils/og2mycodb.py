@@ -69,8 +69,10 @@ def editOGtag(ogtag_dict, ogtag, og):
     return new_oginfo
 
 
-def mycodbOGs(file_path=format_path("$MYCOGFF3/../ogs.tsv"), omes=set()):
+def mycodbOGs(file_path=format_path("$MYCOGFF3/../ogs.tsv"), omes=None):
 
+    if omes is None:
+        omes = set()
     ogInfo_dict = {}
     with open(file_path, "r") as raw:
         if omes:
@@ -104,8 +106,10 @@ def extract_ogs(ogInfo_dict, ogtag):
     return og2gene, gene2og
 
 
-def og2mycoDB(ogInfo_dict, omes=set(), file_path=format_path("$MYCOGFF3/../ogs.tsv")):
+def og2mycoDB(ogInfo_dict, omes=None, file_path=format_path("$MYCOGFF3/../ogs.tsv")):
 
+    if omes is None:
+        omes = set()
     out_list = []
     if os.path.isfile(file_path):
         with open(file_path, "r") as raw:

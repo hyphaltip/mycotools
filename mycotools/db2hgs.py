@@ -2,6 +2,7 @@
 
 import os
 import sys
+import glob
 import shutil
 import argparse
 import subprocess
@@ -12,7 +13,9 @@ from mycotools.acc2fa import dbmain as acc2fa
 from mycotools.db2files import soft_main as symlink_files
 from mycotools.lib.dbtools import mtdb, primaryDB
 from mycotools.lib.biotools import fa2dict, dict2fa, fa2dict_accs
-from mycotools.lib.kontools import format_path, eprint, mkOutput, findExecs
+from mycotools.lib.kontools import (
+    format_path, eprint, mkOutput, findExecs, FatalError, exit_on_fatal,
+)
 
 
 def mk_db2hg_output(out_dir, nscg=False):
@@ -55,40 +58,39 @@ def run_mmseqs(
             raise OSError("invalid working directory")
         elif not algorithm in {"mmseqs easy-linclust", "mmseqs easy-cluster"}:
             raise OSError("invalid mmseqs binary")
+        faa_files = sorted(glob.glob(os.path.join(wrk_dir, "faa", "*faa")))
+        if not faa_files:
+            raise FatalError(f"no proteomes found in {wrk_dir}faa", 1)
         mmseqs_cmd = subprocess.call(
-            algorithm
-            + " "
-            + " ".join(
-                [
-                    wrk_dir + "faa/*faa",
-                    wrk_dir + "cluster",
-                    wrk_dir + "tmp/",
-                    "--min-seq-id",
-                    str(min_id),
-                    "--threads",
-                    str(cpus),
-                    "--compressed",
-                    "1",
-                    "-s",
-                    str(sensitivity),
-                    "--cov-mode",
-                    "0",
-                    "-c",
-                    str(min_cov),
-                ]
-            ),
-            shell=True,
+            algorithm.split()
+            + faa_files
+            + [
+                wrk_dir + "cluster",
+                wrk_dir + "tmp/",
+                "--min-seq-id",
+                str(min_id),
+                "--threads",
+                str(cpus),
+                "--compressed",
+                "1",
+                "-s",
+                str(sensitivity),
+                "--cov-mode",
+                "0",
+                "-c",
+                str(min_cov),
+            ],
             stdout=subprocess.DEVNULL,
         )
-        #                                      stderr = subprocess.DEVNULL)
+        if mmseqs_cmd:
+            raise FatalError("mmseqs clustering failed", 1)
         shutil.move(wrk_dir + "cluster_cluster.tsv", cluster_res_file)
     elif os.path.getsize(cluster_res_file):
         mmseqs_cmd = 0
     else:
         mmseqs_cmd = 1
     if mmseqs_cmd:
-        eprint("\tERROR: cluster failed")
-        sys.exit(1)
+        raise FatalError("mmseqs clustering failed", 1)
     if os.path.isfile(wrk_dir + "cluster_all_seqs.fasta"):
         os.remove(wrk_dir + "cluster_all_seqs.fasta")
     if os.path.isfile(wrk_dir + "cluster_rep_seq.fasta"):
@@ -98,8 +100,10 @@ def run_mmseqs(
     return cluster_res_file
 
 
-def parse_1to1(hg_file, useableOmes=set()):
+def parse_1to1(hg_file, useableOmes=None):
     """Parse MMseqs style homology group output"""
+    if useableOmes is None:
+        useableOmes = set()
     derivations = defaultdict(list)
     with open(hg_file, "r") as raw:
         for line in raw:
@@ -133,8 +137,10 @@ def parse_1to1(hg_file, useableOmes=set()):
     return ome_num, gene2hg, i2ome, hg2gene
 
 
-def compile_homolog_groups(raw_hg_file, out_hg_file, useableOmes=set()):
+def compile_homolog_groups(raw_hg_file, out_hg_file, useableOmes=None):
     """Compile OrthoFinder-style homology group tabular output"""
+    if useableOmes is None:
+        useableOmes = set()
     hg_info = parse_1to1(raw_hg_file)
     hg2genes = hg_info[-1]
     with open(out_hg_file, "w") as out:
@@ -451,6 +457,7 @@ def main(
                 )
 
 
+@exit_on_fatal
 def cli():
     parser = argparse.ArgumentParser(
         description="Circumscribe protein sequences into homology groups"

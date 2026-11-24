@@ -245,7 +245,9 @@ def add_to_mtdb_gff(curadd_gff, addto_gff, ome, replace=False):
     return out_gff
 
 
-def main(toadd_gff, addto_gff=[], ome=None, replace=False):
+def main(toadd_gff, addto_gff=None, ome=None, replace=False):
+    if addto_gff is None:
+        addto_gff = []
     if addto_gff:
         max_mtdb_acc, ome = id_mtdb_accs(addto_gff)
     else:

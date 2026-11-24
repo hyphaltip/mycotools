@@ -41,10 +41,12 @@ def prep_faa_output(hit_list, proteome_path):
     return dict2fa(clus_fa)
 
 
-def compile_alias_coords(gff_list, accs_list=[]):
+def compile_alias_coords(gff_list, accs_list=None):
     """Compile the coordinates of all genes and RNAs of a given gff into a
     dictionary that is accessed through the sequence ID, followed by the
     alias of each sequence"""
+    if accs_list is None:
+        accs_list = []
     accs_set = set(accs_list)
     alias_comp = re.compile(gff3Comps()["Alias"])
 

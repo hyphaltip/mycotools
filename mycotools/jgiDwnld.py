@@ -106,10 +106,12 @@ def retrieve_xml(ome, output):
     return xml_cmd
 
 
-def parse_xml(ft, xml_file, masked=False, forbidden={}, filtered=True):
+def parse_xml(ft, xml_file, masked=False, forbidden=None, filtered=True):
     """Parse the XML data to obtain the file types of interest based on
     predefined hashes that contain the known subdirectories associated with JGI
     organization"""
+    if forbidden is None:
+        forbidden = {}
 
     if ft == "fna":
         if masked:

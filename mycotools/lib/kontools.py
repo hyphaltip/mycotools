@@ -120,10 +120,37 @@ def namespace_to_dict(namespace):
     }
 
 
-def parse_run_log(log_path, args_dict, fail=set()):
+
+class FatalError(RuntimeError):
+    """Unrecoverable error raised by library code. Command-line entry points
+    decorated with `exit_on_fatal` print the message and exit with `code`."""
+
+    def __init__(self, message, code=1):
+        super().__init__(message)
+        self.code = code
+
+
+def exit_on_fatal(func):
+    """Decorator for cli() functions: convert FatalError into a clean exit."""
+    import functools
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except FatalError as e:
+            print(f"\nERROR: {e}", file=sys.stderr, flush=True)
+            sys.exit(e.code)
+
+    return wrapper
+
+
+def parse_run_log(log_path, args_dict, fail=None):
     """Parse a log of the previous run, or create one if it doesn't exist.
     Raise a KeyError if there are deviations that should fail the existing
     run"""
+    if fail is None:
+        fail = set()
     if isinstance(args_dict, argparse.Namespace):
         args_dict = namespace_to_dict(args_dict)
 
@@ -151,7 +178,9 @@ def hex2rgb(hexCode):
     return tuple(int(hexCode.lstrip("#")[i : i + 2], 16) for i in (0, 2, 4))
 
 
-def getColors(size, ignore=[], rgb=False):
+def getColors(size, ignore=None, rgb=False):
+    if ignore is None:
+        ignore = []
     if size < 16:
         colors = [
             "#000000",
@@ -374,7 +403,7 @@ def gunzip(gzip_file, remove=True, spacer="\t"):
         if remove:
             os.remove(gzip_file)
         return new_file
-    except:
+    except Exception:
         if os.path.isfile(new_file):
             if os.path.isfile(gzip_file):
                 os.remove(new_file)
@@ -466,12 +495,14 @@ def fmt_float(val, sig_dig=None):
     return val_str
 
 
-def findExecs(deps, exit=set(), verbose=True):
+def findExecs(deps, exit=None, verbose=True):
     """
     Inputs list of dependencies, `dep`, to check path.
     If dependency is in exit and dependency is not in path,
     then exit.
     """
+    if exit is None:
+        exit = set()
 
     vprint("\nDependency check:", v=verbose, e=True, flush=True)
     checks, failed = [], []
@@ -495,11 +526,13 @@ def findExecs(deps, exit=set(), verbose=True):
     return checks
 
 
-def findEnvs(envs, exit=set(), verbose=True):
+def findEnvs(envs, exit=None, verbose=True):
     """
     Inputs list of paths, `envs`, to check path.
     If env is not in path and it is in exit, exit.
     """
+    if exit is None:
+        exit = set()
 
     vprint("\nEnvironment check:", v=verbose, e=True, flush=True)
     if type(envs) is str:
@@ -634,12 +667,16 @@ def dictSplit(Dict, factor):
     return list_dict
 
 
-def sys_start(args, usage, min_len, dirs=[], files=[]):
+def sys_start(args, usage, min_len, dirs=None, files=None):
     """args is a sys.argv typically, or a list of arguments.
     usage is the usage statement without formatting.
     min_len is the minimum number of arguments that should exist.
     dirs is a list of items that should be directories
     files is a list of items that should be files"""
+    if dirs is None:
+        dirs = []
+    if files is None:
+        files = []
 
     if "-h" in args or "--help" in args:
         print("\n" + usage + "\n", flush=True)
@@ -795,8 +832,14 @@ def mkOutput(base_dir, program, reuse=True, suffix=datetime.now().strftime("%Y%m
         return out_dir + "/"
 
 
-def checkDep(dep_list=[], var_list=[], exempt=set()):
+def checkDep(dep_list=None, var_list=None, exempt=None):
     """Checks all dependencies in path from list, optional exemption set"""
+    if dep_list is None:
+        dep_list = []
+    if var_list is None:
+        var_list = []
+    if exempt is None:
+        exempt = set()
 
     failedVars = []
     check = [shutil.which(dep) for dep in dep_list if dep not in exempt]

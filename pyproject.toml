@@ -4,17 +4,32 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mycotools"
-version = "1.0.0"
+# PEP 440 local version: upstream 1.0.0 plus hyphaltip fork changes
+version = "1.0.0+hyphaltip.1"
 authors = [{name="Zachary Konkel", email="konkelzach@protonmail.com"}]
 description = "Comparative genomics automation and standardization software"
 readme = "README.md"
 license = {file = "LICENSE"}
-requires-python = '>=3.0,<4'
-dependencies = ['biopython', 'pandas', 'requests', 'scipy', 'openpyxl', 'tqdm',
-                'cryptography', 'ete3', 'pyqt5']
+requires-python = '>=3.10'
+# External binaries (mmseqs2, diamond, hmmer, mafft, clipkit, iqtree, fasttree,
+# mcl, blast) are not pip packages: install them with conda/pixi.
+dependencies = [
+    'biopython',
+    'numpy',
+    'pandas',
+    'scipy',
+    'requests',
+    'openpyxl',
+    'tqdm',
+    'cryptography',
+    'cogent3',
+    'dna_features_viewer',
+    'ete3',
+    'pyqt5',
+]
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
+    "License :: OSI Approved :: BSD License",
     "Operating System :: POSIX :: Linux",
 ]
 

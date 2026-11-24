@@ -68,7 +68,7 @@ def copy_file(old_path, new_path):
     try:
         shutil.copy(old_path, new_path)
         return True
-    except:
+    except Exception:
         raise IOError
 
 
@@ -340,8 +340,10 @@ def predb2mtdb(predb):
     return infdb
 
 
-def gen_omes(newdb, refdb=None, ome_col="ome", forbidden=set(), spacer="\t"):
+def gen_omes(newdb, refdb=None, ome_col="ome", forbidden=None, spacer="\t"):
 
+    if forbidden is None:
+        forbidden = set()
     t_failed = []
     ref_ome_check = [k for k, v in Counter(refdb["ome"]).items() if v > 1]
     #    new_ome_check = [k for k,v in Counter(newdb['ome']).items() if v > 1 and k]
@@ -648,7 +650,7 @@ def gff_mngr(ome, gff, cur_path, source, assembly_accession):
                     entry["attributes"] = entry["attributes"].replace(old_ome, ome)
                 new_gff = rename_and_organize(new_gff)
                 gff = new_gff
-            except:
+            except Exception:
                 gff = curGFF3(gff, ome, cur_seqids=True)
         #        else:
         #           gff = curGFF3(gff, ome)
@@ -692,12 +694,14 @@ def main(
     wrk_dir,
     verbose=False,
     spacer="\t\t\t",
-    forbidden=set(),
+    forbidden=None,
     cpus=1,
     exit=False,
     remove=False,
 ):
 
+    if forbidden is None:
+        forbidden = set()
     for dir_ in [wrk_dir + "fna/", wrk_dir + "gff3/", wrk_dir + "faa/"]:
         if not os.path.isdir(dir_):
             os.mkdir(dir_)

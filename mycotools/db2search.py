@@ -46,11 +46,13 @@ from mycotools.utils.extractHmmsearch import main as exHmm
 from mycotools.utils.extractHmmAcc import grabAccs, main as absHmm
 
 
-def compile_hmm_cmd(db, hmm_path, output, ome_set=set(), cpu=1):
+def compile_hmm_cmd(db, hmm_path, output, ome_set=None, cpu=1):
     """
     Inputs: mycotools db, hmm_path, output directory, set of omes to ignore.
     Outputs: tuples of arguments for hmmsearches
     """
+    if ome_set is None:
+        ome_set = set()
 
     cmd_tuples = []
     for ome, row in db.items():
@@ -383,14 +385,14 @@ def comp_blast_tups(
     if search_args:
         blast_scaf.extend(search_args)
     blast_scaf.extend(
-        ["-outfmt", '"6 qseqid sseqid pident ppos sstart send evalue bitscore"']
+        ["-outfmt", "6 qseqid sseqid pident ppos sstart send evalue bitscore"]
     )
 
     blast_cmds = []
     for i, ome in enumerate(seq_db["ome"]):
         if seq_db[biotype][i]:
             blast_cmds.append(
-                " ".join(compileBlastCmd(ome, seq_db[biotype][i], out_dir, blast_scaf))
+                compileBlastCmd(ome, seq_db[biotype][i], out_dir, blast_scaf)
             )
     return blast_cmds
 
@@ -411,9 +413,11 @@ def comp_diamond_tups(
     max_hits=None,
     evalue=None,
     coverage=None,
-    search_args=[],
+    search_args=None,
 ):
 
+    if search_args is None:
+        search_args = []
     if not os.path.isdir(out_dir + "dmnd/"):
         os.mkdir(out_dir + "dmnd/")
     blast_scaf = [
@@ -474,10 +478,12 @@ def run_mmseq(
     query,
     mmseqs="mmseqs",
     coverage=None,
-    search_args=[],
+    search_args=None,
     cpus=1,
     iterations=3,
 ):
+    if search_args is None:
+        search_args = []
     db_dir = format_path("$MYCOGFF3/../db")
 
     if not os.path.isdir(f"{out_dir}db/"):
@@ -630,8 +636,10 @@ def parseOutput_mmseqs(
     return ome_results
 
 
-def compileResults(res_dict, skip=[]):
+def compileResults(res_dict, skip=None):
 
+    if skip is None:
+        skip = []
     output_res = {}
     for i in res_dict:
         for hit in res_dict[i]:
@@ -922,7 +930,7 @@ def ObyOsearch(
                 search_args=search_arg,
             )
             search_outs = multisub(
-                search_tups, processes=cpus, verbose=2, shell=True, injectable=True
+                search_tups, processes=cpus, verbose=2, injectable=True
             )
             scale = 100000
 
@@ -1157,13 +1165,17 @@ def mmseqs_main(
     coverage=None,
     cpus=1,
     biotype=None,
-    skip=[],
+    skip=None,
     coordinate=False,
-    search_arg=[],
+    search_arg=None,
     convert=False,
     iterations=3,
 ):
 
+    if skip is None:
+        skip = []
+    if search_arg is None:
+        search_arg = []
     report_dir = prepOutput(out_dir)
     if isinstance(query, str):
         query = [query]
@@ -1228,14 +1240,18 @@ def blast_main(
     coverage=None,
     cpus=1,
     force=False,
-    skip=[],
+    skip=None,
     diamond=None,
     coordinate=False,
-    search_arg=[],
+    search_arg=None,
     ppos=0,
     blastdb=False,
 ):
 
+    if skip is None:
+        skip = []
+    if search_arg is None:
+        search_arg = []
     if blast in {"tblastn", "blastp"}:
         seq_type = "prot"
         biotype = "faa"

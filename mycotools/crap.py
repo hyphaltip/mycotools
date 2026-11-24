@@ -75,9 +75,13 @@ def parse_conversion_file(conversion_file):
     return {x[0]: x[1] for x in data}
 
 
-def prep_gff(gff, prots, comps, hits=set(), par_dict={}):
+def prep_gff(gff, prots, comps, hits=None, par_dict=None):
     """Prepare an inputted GFF file for CRAP analysis by acquiring the protein
     IDs that will be used to search downstream."""
+    if hits is None:
+        hits = set()
+    if par_dict is None:
+        par_dict = {}
 
     RNA = False
     for entry in gff:
@@ -553,8 +557,10 @@ def gene2hg2ome2hg(gene2hg):
     return ome_gene2hg
 
 
-def compile_genes_by_omes(search_fas, conversion_dict, omes=set()):
+def compile_genes_by_omes(search_fas, conversion_dict, omes=None):
     """For each hit in each fasta, relate it to its query and genome code"""
+    if omes is None:
+        omes = set()
     query_genes = {}
 
     # for each query fasta
@@ -846,7 +852,9 @@ def extend_color_palette(hgs, color_dict):
     return color_dict
 
 
-def make_color_palette(inputs, conversion_dict={}):
+def make_color_palette(inputs, conversion_dict=None):
+    if conversion_dict is None:
+        conversion_dict = {}
     if isinstance(inputs, list):  # genes list
         for i in inputs:
             if i not in conversion_dict:
@@ -1024,13 +1032,15 @@ def crap_mngr(
     hg=None,
     hgs=None,
     reoutput=True,
-    out_keys=[],
+    out_keys=None,
     labels=True,
     midpoint=True,
     ext=".svg",
     circular=False,
 ):
 
+    if out_keys is None:
+        out_keys = []
     db = db.set_index("ome")
     info = tree_mngr(
         query, out_dir, wrk_dir, tre_dir, fast, tree_suffix, cpus, verbose, reoutput
@@ -1333,11 +1343,13 @@ def hg_main(
     faa_dir=None,
     clus_meth="mmseqs easy-cluster",
     ext=".svg",
-    conversion_dict={},
+    conversion_dict=None,
     circular=False,
     output_loci=False,
 ):
     """input_genes is a list of genes within an inputted cluster"""
+    if conversion_dict is None:
+        conversion_dict = {}
 
     wrk_dir, loc_dir = out_dir + "working/", out_dir + "loci/"
     gff_dir, tre_dir = wrk_dir + "genes/", wrk_dir + "trees/"
@@ -1604,7 +1616,7 @@ def search_main(
     verbose=False,
     interval=0.01,
     outgroups=False,
-    conversion_dict={},
+    conversion_dict=None,
     labels=True,
     midpoint=True,
     clus_meth="mmseqs easy-linclust",
@@ -1615,6 +1627,8 @@ def search_main(
     output_loci=False,
 ):
     """input_genes is a list of genes within an inputted cluster"""
+    if conversion_dict is None:
+        conversion_dict = {}
 
     print("\nPreparing run", flush=True)
     wrk_dir, loc_dir = out_dir + "working/", out_dir + "loci/"

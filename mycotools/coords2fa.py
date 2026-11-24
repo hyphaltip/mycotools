@@ -124,7 +124,7 @@ def cli():
                         )
                     )
 
-        except:
+        except Exception:
             eprint("\nERROR: incorrectly formatted input", flush=True)
 
     # for each file and coordinates, prepare for output

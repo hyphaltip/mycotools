@@ -22,9 +22,11 @@ from mycotools.ncbiDwnld import main as ncbi_dwnld
 from mycotools.predb2mtdb import main as predb2mtdb
 
 
-def redundancy_check(db, ncbi_df, ass_acc, duplicates={}):
+def redundancy_check(db, ncbi_df, ass_acc, duplicates=None):
     """should expect that ncbi_df (pd.DataFrame()) is only comprised of biosamples that are
     not overlapping with JGI"""
+    if duplicates is None:
+        duplicates = {}
     db["index"], updates, old_rows = db.loc[:, "ome"], [], {}
     db["versionless"] = [x[: x.find(".")] for x in list(db["assembly_acc"])]
     assembly_accs = set(db["versionless"])
@@ -121,13 +123,17 @@ def main(
     gff=True,
     transcript=False,
     rerun=False,
-    failed_dict={},
-    duplicates={},
+    failed_dict=None,
+    duplicates=None,
     check_MD5=True,
     spacer="\t\t",
     fallback=False,
 ):
 
+    if failed_dict is None:
+        failed_dict = {}
+    if duplicates is None:
+        duplicates = {}
     os.chdir(out_dir)
     todel = []
 

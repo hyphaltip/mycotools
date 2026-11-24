@@ -32,10 +32,14 @@ def compileLog(log_path):
     return log
 
 
-def jgi_redundancy_check(db, jgi_df, duplicates={}, ome_col="portal", jgi2ncbi={}):
+def jgi_redundancy_check(db, jgi_df, duplicates=None, ome_col="portal", jgi2ncbi=None):
     '''everything in jgi_df (pd.DataFrame()) should be have a valid biosample
     at this point.
     db will have the index set at "assembly_acc"'''
+    if duplicates is None:
+        duplicates = {}
+    if jgi2ncbi is None:
+        jgi2ncbi = {}
 
     db["version"].fillna(0.0)
     jgi_df["version"] = jgi_df.loc[:, "version"].replace(np.nan, "0.0")
@@ -243,12 +247,18 @@ def main(
     repeatmasked=True,
     nonpublished=False,
     rerun=False,
-    failed_dict={},
-    duplicates={},
+    failed_dict=None,
+    duplicates=None,
     spacer="\t\t",
-    jgi2ncbi={},
+    jgi2ncbi=None,
 ):
 
+    if failed_dict is None:
+        failed_dict = {}
+    if duplicates is None:
+        duplicates = {}
+    if jgi2ncbi is None:
+        jgi2ncbi = {}
     if not nonpublished:
         jgi_df = jgi_df[jgi_df["is published"] == "Y"]
     if "assembly_acc" in jgi_df.columns:
