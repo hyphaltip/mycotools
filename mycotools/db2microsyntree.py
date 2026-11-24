@@ -349,7 +349,7 @@ def align_microsynt_np(m_arr, i2ome, hg2gene, hgpair2i, wrk_dir, nschgs=None):
             max_hgs=100,
             max_median=max_median,
             max_stdev=max_stdev,
-            min_genomes=len(i2ome),
+            min_genomes=1,  # fraction of genomes (1 = all), not a count
         )
         if len(schgs) > 9:
             nschgs = schgs
