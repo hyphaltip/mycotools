@@ -47,7 +47,7 @@ def grab_accs(accs, limit):
                     + f"{records[0]['GBSeq_sequence'].upper()}\n"
                 )
                 break
-            except:
+            except Exception:
                 time.sleep(1)
 
     return out_str

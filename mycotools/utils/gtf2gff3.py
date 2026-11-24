@@ -508,8 +508,10 @@ def remove_start_stop(gtf):
     return [x for x in gtf if x["type"] not in {"start_codon", "stop_codon"}]
 
 
-def curate(gff, prefix=None, failed=set(), comps=gtfComps()):
+def curate(gff, prefix=None, failed=None, comps=gtfComps()):
 
+    if failed is None:
+        failed = set()
     failed = set(failed)
     gene_comp = re.compile(comps["id"])
     tran_comp = re.compile(comps["transcript"])

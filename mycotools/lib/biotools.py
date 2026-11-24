@@ -300,7 +300,9 @@ def fa2dict_str(fasta_input):
     return fasta_dict
 
 
-def fa2dict_accs(fasta_input, accs=set()):  # file_ = True):
+def fa2dict_accs(fasta_input, accs=None):  # file_ = True):
+    if accs is None:
+        accs = set()
     fasta_dict = {}
     with open(fasta_input, "r") as raw:
         for line in raw:

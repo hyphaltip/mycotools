@@ -315,9 +315,11 @@ class mtdb(dict):
         else:
             return df
 
-    def append(self, info={}):
+    def append(self, info=None):
         #        if any(x not in set(self.columns) for x in info):
         #           raise KeyError('Invalid keys: ' + str(set(info.keys()).difference(set(self.columns))))
+        if info is None:
+            info = {}
         index = self.index
         df = copy.copy(self)
         df = df.reset_index()
@@ -656,8 +658,10 @@ def hit2taxonomy(
     return tax_dict, sleep
 
 
-def prepare_tax_dicts(df, tax_dicts={}):
+def prepare_tax_dicts(df, tax_dicts=None):
     """Identify the genera that do not have higher taxonomy ascribed to them"""
+    if tax_dicts is None:
+        tax_dicts = {}
 
     need_tax = set()
     # is the df of mtdb class or have a taxonomy column as a list?
@@ -706,7 +710,7 @@ def query_ncbi4taxonomy(genus, api_key, king, rank, count=0):
             handle = Entrez.esearch(db="Taxonomy", term=search_term)
             ids = Entrez.read(handle)["IdList"]
             break
-        except:
+        except Exception:
             time.sleep(3)
             count = 0
 
@@ -734,7 +738,7 @@ def query_ncbi4taxonomy(genus, api_key, king, rank, count=0):
             else:
                 lineages = []
             break
-        except:
+        except Exception:
             time.sleep(3)
             lineages = []
             count = 0
@@ -772,10 +776,12 @@ def query_ncbi4taxonomy(genus, api_key, king, rank, count=0):
 
 
 def gather_taxonomy(
-    df, api_key=None, king="fungi", rank="kingdom", tax_dicts={}, output_path=None
+    df, api_key=None, king="fungi", rank="kingdom", tax_dicts=None, output_path=None
 ):
     """Gather taxonomy for an MTDB or deprecated pd MTDB by querying NCBI's
     taxonomy hierarchy"""
+    if tax_dicts is None:
+        tax_dicts = {}
     need_tax, tax_dicts = prepare_tax_dicts(df, tax_dicts)
 
     count = 0
@@ -806,12 +812,14 @@ def gather_taxonomy_dataset(
     api_key=None,
     king="fungi",
     rank="kingdom",
-    tax_dicts={},
+    tax_dicts=None,
     output_path=None,
     verbose=False,
 ):
     """Gather taxonomy for an MTDB or deprecated pd MTDB by querying NCBI's
     taxonomy hierarchy"""
+    if tax_dicts is None:
+        tax_dicts = {}
     if not output_path:
         tax_dicts = gather_taxonomy_fallback(
             df, api_key=api_key, king=key, rank=rank, tax_dicts=tax_dicts

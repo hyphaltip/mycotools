@@ -2,6 +2,7 @@
 
 import os
 import sys
+import glob
 import shutil
 import argparse
 import subprocess
@@ -13,6 +14,8 @@ from collections import defaultdict, Counter
 from mycotools.db2files import soft_main as symlink_files
 from mycotools.db2hgs import id_near_schgs
 from mycotools.lib.kontools import (
+    FatalError,
+    exit_on_fatal,
     format_path,
     mkOutput,
     findExecs,
@@ -44,40 +47,39 @@ def run_mmseqs(
             raise OSError("invalid working directory")
         elif not algorithm in {"mmseqs easy-linclust", "mmseqs easy-cluster"}:
             raise OSError("invalid mmseqs binary")
+        faa_files = sorted(glob.glob(os.path.join(wrk_dir, "faa", "*faa")))
+        if not faa_files:
+            raise FatalError(f"no proteomes found in {wrk_dir}faa", 1)
         mmseqs_cmd = subprocess.call(
-            algorithm
-            + " "
-            + " ".join(
-                [
-                    wrk_dir + "faa/*faa",
-                    wrk_dir + "cluster",
-                    wrk_dir + "tmp/",
-                    "--min-seq-id",
-                    str(min_id),
-                    "--threads",
-                    str(cpus),
-                    "--compressed",
-                    "1",
-                    "-s",
-                    str(sensitivity),
-                    "--cov-mode",
-                    "0",
-                    "-c",
-                    str(min_cov),
-                ]
-            ),
-            shell=True,
+            algorithm.split()
+            + faa_files
+            + [
+                wrk_dir + "cluster",
+                wrk_dir + "tmp/",
+                "--min-seq-id",
+                str(min_id),
+                "--threads",
+                str(cpus),
+                "--compressed",
+                "1",
+                "-s",
+                str(sensitivity),
+                "--cov-mode",
+                "0",
+                "-c",
+                str(min_cov),
+            ],
             stdout=subprocess.DEVNULL,
         )
-        #                                      stderr = subprocess.DEVNULL)
+        if mmseqs_cmd:
+            raise FatalError("mmseqs clustering failed", 1)
         shutil.move(wrk_dir + "cluster_cluster.tsv", cluster_res_file)
     elif os.path.getsize(cluster_res_file):
         mmseqs_cmd = 0
     else:
         mmseqs_cmd = 1
     if mmseqs_cmd:
-        eprint("\tERROR: cluster failed")
-        sys.exit(1)
+        raise FatalError("mmseqs clustering failed", 1)
     if os.path.isfile(wrk_dir + "cluster_all_seqs.fasta"):
         os.remove(wrk_dir + "cluster_all_seqs.fasta")
     if os.path.isfile(wrk_dir + "cluster_rep_seq.fasta"):
@@ -87,11 +89,13 @@ def run_mmseqs(
     return cluster_res_file
 
 
-def parse_orthofinder(hg_file, useableOmes=set()):
+def parse_orthofinder(hg_file, useableOmes=None):
     """
     imports orthofinder Orthogroups.txt "hg_file". outputs several data structures:
     ome_num = {ome: number}, gene2hg = {gene: og}, i2ome = [ome0, ome1, ome2]
     """
+    if useableOmes is None:
+        useableOmes = set()
 
     gene2hg, ome_num, i2ome, hg2gene = {}, {}, [], {}
     with open(hg_file, "r") as raw:
@@ -114,7 +118,9 @@ def parse_orthofinder(hg_file, useableOmes=set()):
     return ome_num, gene2hg, i2ome, hg2gene
 
 
-def parse_1to1(hg_file, useableOmes=set()):
+def parse_1to1(hg_file, useableOmes=None):
+    if useableOmes is None:
+        useableOmes = set()
     derivations = defaultdict(list)
     with open(hg_file, "r") as raw:
         for line in raw:
@@ -153,7 +159,9 @@ def parse_1to1(hg_file, useableOmes=set()):
     return ome_num, gene2hg, i2ome, hg2gene
 
 
-def compile_homolog_groups(hg_file, wrk_dir=None, useableOmes=set()):
+def compile_homolog_groups(hg_file, wrk_dir=None, useableOmes=None):
+    if useableOmes is None:
+        useableOmes = set()
     try:
         hg_info = parse_orthofinder(hg_file, useableOmes)
     except ValueError:
@@ -428,7 +436,7 @@ def main(
     min_cov=0,
     min_id=0.3,
     n50thresh=None,
-    near_single_copy_genes=[],
+    near_single_copy_genes=None,
     constraint=None,
     verbose=False,
     return_post_compile=False,
@@ -436,6 +444,8 @@ def main(
 ):
 
     # obtain useable omes
+    if near_single_copy_genes is None:
+        near_single_copy_genes = []
     useableOmes, dbOmes = set(), set(db.keys())
     print("\nI. Inputting data", flush=True)
     if n50thresh:  # optional n50 threshold via mycotoolsDB
@@ -571,6 +581,7 @@ def main(
     return ome2i, gene2hg, i2ome, hg2gene, ome2pairs, cooccur_dict
 
 
+@exit_on_fatal
 def cli():
     parser = argparse.ArgumentParser(
         description="Generate a microsynteny "

@@ -10,8 +10,10 @@ from mycotools.lib.kontools import format_path, split_input, eprint, vprint
 from mycotools.lib.dbtools import mtdb
 
 
-def compile_tree(tree_path, root=[], verbose=False):
+def compile_tree(tree_path, root=None, verbose=False):
     """Compile a phylogeny from a path and conver the tip names to an index"""
+    if root is None:
+        root = []
     phylo = load_tree(tree_path)
     tips = set(phylo.get_tip_names())
     vprint(f"{len(tips)} tips on input", v=verbose, e=True)
@@ -35,8 +37,10 @@ def compile_tree(tree_path, root=[], verbose=False):
     return phylo
 
 
-def prune_to_new(phylo, tips=[], spacer=""):
+def prune_to_new(phylo, tips=None, spacer=""):
     """Prune missing tips from a rooted phylogeny"""
+    if tips is None:
+        tips = []
     missing = set(phylo.get_tip_names()).difference(tips)
     if missing:
         eprint(f"{spacer}Removing {len(missing)} tips", flush=True)
@@ -59,14 +63,20 @@ def rm_support(phylo_str):
 def main(
     phylo_path,
     db=None,
-    tips=[],
-    root=[],
+    tips=None,
+    root=None,
     trim=False,
     phylo=None,
     verbose=True,
-    convert={},
+    convert=None,
 ):
 
+    if tips is None:
+        tips = []
+    if root is None:
+        root = []
+    if convert is None:
+        convert = {}
     if phylo_path:
         phylo = compile_tree(phylo_path, root, verbose=verbose)
 

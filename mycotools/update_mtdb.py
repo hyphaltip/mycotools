@@ -127,9 +127,11 @@ def gen_config(
     rogue=False,
     nonpublished=False,
     jgi=False,
-    rank2lineages={},
+    rank2lineages=None,
 ):
 
+    if rank2lineages is None:
+        rank2lineages = {}
     config = {
         "forbidden": forbidden,
         "repository": repo,
@@ -158,9 +160,11 @@ def initDB(
     nonpublished=False,
     jgi=True,
     repo=None,
-    rank2lineages={},
+    rank2lineages=None,
 ):
     """Initialize database in `init_dir`"""
+    if rank2lineages is None:
+        rank2lineages = {}
 
     new_dirs = [
         init_dir + "data/",
@@ -435,9 +439,11 @@ def dwnld_ncbi_metadata(
 
 
 def prep_taxa_cols(
-    df, taxonomy_dir, col="#Organism/Name", api=None, acc2org={}, max_attempts=3
+    df, taxonomy_dir, col="#Organism/Name", api=None, acc2org=None, max_attempts=3
 ):
 
+    if acc2org is None:
+        acc2org = {}
     skip_prep = list(acc2org.keys())
     gca_prep = [x.upper().replace("GCF", "GCA") for x in skip_prep]
     gcf_prep = [x.upper().replace("GCA", "GCF") for x in skip_prep]
@@ -667,7 +673,7 @@ def exec_rm_overlap(ncbi_df, todel_i):
     return ncbi_jgi_overlap, ncbi_df
 
 
-def rm_ncbi_overlap(ncbi_df, mycocosm_df, jgi2ncbi, fails=set(), acc2meta={}, api=3):
+def rm_ncbi_overlap(ncbi_df, mycocosm_df, jgi2ncbi, fails=None, acc2meta=None, api=3):
     """Acquire MycoCosm assembly accessions from NCBI.
     pd.DataFrame(ncbi_df) = post clean ncbi_df;
     set(mycocosm_omes) = set of lower-cased mycocosm genome codes;
@@ -675,6 +681,10 @@ def rm_ncbi_overlap(ncbi_df, mycocosm_df, jgi2ncbi, fails=set(), acc2meta={}, ap
     First, obtain the genome UID by esearching via Entrez;
     Next, use the genome UID to obtain the genome summary via Entrez;
     Finally, relate the accession to the MycoCosm dataframe"""
+    if fails is None:
+        fails = set()
+    if acc2meta is None:
+        acc2meta = {}
     version_comp = re.compile(r"\s[Vv]\d+\.\d+")
     mycocosm_omes = set([x.lower() for x in list(mycocosm_df["portal"])])
 
@@ -1156,10 +1166,12 @@ def rogue_update(
     group="eukaryotes",
     kingdom="Fungi",
     remove=True,
-    lineage_constraints={},
+    lineage_constraints=None,
     ncbi_fallback=False,
 ):
     """Initialize/update a standalone primary MTDB"""
+    if lineage_constraints is None:
+        lineage_constraints = {}
     # NEED to mark none for new databases' refdb
     # initialize update
     print("\nInitializing run", flush=True)

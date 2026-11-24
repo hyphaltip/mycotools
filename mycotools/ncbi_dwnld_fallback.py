@@ -328,7 +328,7 @@ def collect_ftps(
                         ftp_path.replace("ftp://", "https://"), allow_redirects=True
                     )
                     break
-                except:
+                except Exception:
                     time.sleep(1)
 
             if r.status_code != 200:

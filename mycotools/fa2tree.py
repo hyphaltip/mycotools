@@ -825,7 +825,7 @@ def check_tree_support(tree_file):
     """Acquire the support values of a newick"""
     try:
         t = Tree(tree_file)
-    except:
+    except Exception:
         return None
     supports = []
     # parse the tree
