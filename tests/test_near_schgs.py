@@ -36,4 +36,17 @@ def test_microsyntree_passes_a_fraction():
         if isinstance(node, ast.Call) and getattr(node.func, "id", "") == "id_near_schgs":
             for kw in node.keywords:
                 if kw.arg == "min_genomes":
-                    assert isinstance(kw.value, ast.Constant) and kw.value.value <= 1
+                    assert isinstance(kw.value, (ast.Constant, ast.Name))
+    # every fraction tried in the relaxation loop must be a fraction (<= 1)
+    for node in ast.walk(ast.parse(src.read_text())):
+        if isinstance(node, ast.For) and getattr(node.target, "id", "") == "min_genomes":
+            assert all(isinstance(e, ast.Constant) and 0 < e.value <= 1 for e in node.iter.elts)
+
+
+def test_partial_hg_found_when_fraction_relaxed():
+    omes = {"a", "b", "c", "d"}
+    hg2gene = {"hg_partial": ["a_4", "b_4", "c_4"]}  # in 3 of 4 genomes
+    schgs, *_ = id_near_schgs(hg2gene, omes, max_hgs=100, max_median=1, max_stdev=0.2, min_genomes=1)
+    assert schgs == []
+    schgs, *_ = id_near_schgs(hg2gene, omes, max_hgs=100, max_median=1, max_stdev=0.2, min_genomes=0.75)
+    assert schgs == ["hg_partial"]

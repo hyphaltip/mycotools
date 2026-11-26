@@ -162,7 +162,7 @@ def id_near_schgs(
     min_hg2gene = {
         k: v
         for k, v in sorted(hg2gene.items(), key=lambda x: len(x[1]))
-        if len(v) >= len(omes)
+        if len(v) >= min_genomes * len(omes)  # an HG in fewer genomes cannot pass min_genomes
     }
 
     if max_mean:

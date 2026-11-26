@@ -340,32 +340,38 @@ def rm_invariate_sites(arr):
 
 
 def align_microsynt_np(m_arr, i2ome, hg2gene, hgpair2i, wrk_dir, nschgs=None):
-    max_median = 1
-    max_stdev = 0.2
-    while not nschgs and max_median < 3:
-        schgs, nschgs, n, n, n = id_near_schgs(
-            hg2gene,
-            set(i2ome),
-            max_hgs=100,
-            max_median=max_median,
-            max_stdev=max_stdev,
-            min_genomes=1,  # fraction of genomes (1 = all), not a count
-        )
-        if len(schgs) > 9:
-            nschgs = schgs
-            print(f"\t\t{len(schgs)} HGs in single copy extracted", flush=True)
-        elif len(nschgs) < 10:
-            nschgs = []
-        if nschgs:
-            print(
-                f"\t\t{len(nschgs)} HGs with <= {max_median} median copy "
-                + f"number and <= {max_stdev} standard deviation extracted",
-                flush=True,
+    # Require the near single copy HGs in every genome first. With many genomes (annotation gaps),
+    # none may exist, so relax the required fraction of genomes step by step.
+    for min_genomes in (1, 0.95, 0.9, 0.8):
+        max_median = 1
+        max_stdev = 0.2
+        while not nschgs and max_median < 3:
+            schgs, nschgs, n, n, n = id_near_schgs(
+                hg2gene,
+                set(i2ome),
+                max_hgs=100,
+                max_median=max_median,
+                max_stdev=max_stdev,
+                min_genomes=min_genomes,  # fraction of genomes (1 = all), not a count
             )
-        max_stdev += 0.2
-        if max_stdev > 2:
-            max_stdev = 0.1
-            max_median += 1
+            if len(schgs) > 9:
+                nschgs = schgs
+                print(f"\t\t{len(schgs)} HGs in single copy extracted", flush=True)
+            elif len(nschgs) < 10:
+                nschgs = []
+            if nschgs:
+                print(
+                    f"\t\t{len(nschgs)} HGs with <= {max_median} median copy "
+                    + f"number and <= {max_stdev} standard deviation extracted "
+                    + f"(present in >= {min_genomes:.0%} of genomes)",
+                    flush=True,
+                )
+            max_stdev += 0.2
+            if max_stdev > 2:
+                max_stdev = 0.1
+                max_median += 1
+        if nschgs:
+            break
     if not nschgs:
         eprint(
             "\nERROR: could not detect 10 genes present in all genomes "
